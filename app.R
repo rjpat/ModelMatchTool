@@ -4,6 +4,7 @@ library(tidyr)
 library(readr)
 library(stringr)
 library(purrr)
+library(CleanAF)
 
 ui <- fluidPage(
   tabsetPanel(
@@ -32,13 +33,15 @@ server <- function(input, output) {
     # Name is converted to lower as match is case sensitive
     x$Name <- str_to_lower(x$Name)
     
-    # Everything except alpha numeric characters are stripped out
+    #' Everything except alpha numeric characters are stripped out
+    #' and characters are split
+    
     x %>%
       mutate(Grouped = strsplit(as.character(Name), " ")) %>%
-      mutate(cleanedName = gsub("[^[:alnum:][:space:]']", "", Name)) %>%
-      mutate(cleanedName = trimws(gsub("\\s+", " ", cleanedName)),
-             len = sapply(gregexpr("\\W+", cleanedName), length) + 1) %>%
-      mutate(splitName = str_split(cleanedName, " "))
+      mutate(cleanedName = CleanAF::name_clean(Name),
+             len = sapply(gregexpr("\\W+", cleanedName), length) + 1,
+             splitName = CleanAF::name_clean_split(Name))
+
   }
   
   rawDataLoaded <- reactive({
@@ -70,7 +73,7 @@ server <- function(input, output) {
     
     # modelsInt <- testSetCleansing(read.csv('Models2.csv'))
     # preppedInt <- testSetCleansing(read.csv('test2.csv', fileEncoding = 'UTF-8-BOM'))[1:15,]
-    
+
     modelsInt$result <- as.numeric(0)
     preppedInt$rowNumID <- as.numeric(0)
     
